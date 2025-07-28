@@ -1,6 +1,7 @@
 #pragma once
 
 #include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 #define SSD1306_DEV_ADDR 0x3c
 
