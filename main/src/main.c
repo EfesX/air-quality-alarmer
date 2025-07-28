@@ -136,7 +136,6 @@ void app_main(void)
     ESP_LOGI(TAG_APP, "initializing I2C...");
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG_APP, "...done");
-    
 
     display_task_config_t display_task_config = {
         .i2c_smphr = i2c_smphr,
