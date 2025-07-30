@@ -5,10 +5,10 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 
-
 #include "display.h"
 #include "main.h"
 #include "measurment.h"
+#include "wifi.h"
 
 #define I2C_MASTER_SCL_IO           22
 #define I2C_MASTER_SDA_IO           21
@@ -47,6 +47,7 @@ static inline esp_err_t i2c_master_init(void)
     );
 }
 
+#if LOG_SENSORS_ENABLE == 1
 /**
  * @brief Task for sending measurment data to uart
 */
@@ -75,6 +76,7 @@ static void uart_log_task(void *arg)
         fputs(buf, stdout);
     }
 }
+#endif
 
 static void buzzer_task(void *arg)
 {
@@ -133,7 +135,6 @@ void app_main(void)
     ESP_LOGI(TAG_APP, "initializing I2C...");
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG_APP, "...done");
-    
 
     display_task_config_t display_task_config = {
         .i2c_smphr = i2c_smphr,
@@ -144,12 +145,14 @@ void app_main(void)
         ESP_TASK_PRIO_MIN + 2, NULL, tskNO_AFFINITY
     );
 
-    vTaskDelay(pdMS_TO_TICKS(250));
+    wifi_start();
 
-        xTaskCreatePinnedToCore(uart_log_task, "ulog", 
-        2048, (void*) logging_queue, 
+#if LOG_SENSORS_ENABLE == 1
+    xTaskCreatePinnedToCore(uart_log_task, "ulog", 
+        4096, (void*) logging_queue, 
         ESP_TASK_PRIO_MIN + 1, NULL, tskNO_AFFINITY
     );
+#endif
 
     xTaskCreatePinnedToCore(buzzer_task, "buzz", 
         1024, (void*) buzzer_queue, 
@@ -179,4 +182,12 @@ void app_main(void)
         if(sensors_data.ens160.aqi > 3 && sensors_data.ens160.eco2 > 1000)
             xQueueSend(buzzer_queue, &buzzer_duration, pdMS_TO_TICKS(50));
     }
+}
+
+void reboot_task(void* arg)
+{
+    ESP_LOGI(TAG_APP, "rebooting...");
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    esp_restart();
+    vTaskDelete(NULL);
 }
