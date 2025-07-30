@@ -141,7 +141,7 @@ void app_main(void)
         .queue = display_queue
     };
     xTaskCreatePinnedToCore(display_task, "disp", 
-        2048, (void*) &display_task_config, 
+        4096, (void*) &display_task_config, 
         ESP_TASK_PRIO_MIN + 2, NULL, tskNO_AFFINITY
     );
 
