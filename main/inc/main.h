@@ -10,6 +10,8 @@
 
 #define LOG_SENSORS_ENABLE 0
 
+#define MIN(a,b) (a < b ? a : b)
+
 typedef struct {
     uint8_t status;
     float temperature;

@@ -5,8 +5,6 @@
 #include "esp_err.h"
 #include "esp_http_server.h"
 
-#define MIN(a,b) (a < b ? a : b)
-
 static inline bool parse_multipart_form(const char* buf, char* ssid, char* pass);
 static inline bool parse_urlencoded_form(const char* buf, char* ssid, char* pass);
 static inline int read_data_from_request(httpd_req_t *req, char *buf);

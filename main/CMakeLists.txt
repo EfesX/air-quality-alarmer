@@ -12,6 +12,7 @@ idf_component_register(
         "src/creds.c"
         "src/http_handler_root.c"
         "src/http_handler_save.c"
+        "src/http_update_firmware.c"
     INCLUDE_DIRS 
         "inc"
         "../build"
@@ -21,6 +22,7 @@ idf_component_register(
         nvs_flash
         esp_wifi
         esp_http_server
+        app_update
 )
 
 target_compile_definitions(${COMPONENT_LIB} PRIVATE U8G2_USE_LARGE_FONTS=0)

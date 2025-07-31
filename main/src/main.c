@@ -9,6 +9,8 @@
 #include "main.h"
 #include "measurment.h"
 #include "wifi.h"
+#include "esp_partition.h"
+#include "esp_ota_ops.h"
 
 #define I2C_MASTER_SCL_IO           22
 #define I2C_MASTER_SDA_IO           21
@@ -119,6 +121,18 @@ static void buzzer_task(void *arg)
 
 void app_main(void)
 {
+    const esp_partition_t *boot_partition = esp_ota_get_boot_partition();
+    ESP_LOGI("BOOT INFO", "Booted from: %s", boot_partition->label);
+
+    const esp_partition_t *running_partition = esp_ota_get_running_partition();
+    ESP_LOGI("BOOT INFO", "Current partition: %s", running_partition->label);
+    ESP_LOGI("BOOT INFO", "Type: %d, Subtype: %d, Address: 0x%x, Size: %d",
+        running_partition->type,
+        running_partition->subtype,
+        (unsigned int)running_partition->address,
+        (int)running_partition->size
+    );
+
     vTaskDelay(pdMS_TO_TICKS(100));
 
     i2c_smphr = xSemaphoreCreateMutex();
@@ -186,8 +200,13 @@ void app_main(void)
 
 void reboot_task(void* arg)
 {
-    ESP_LOGI(TAG_APP, "rebooting...");
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    ESP_LOGI(TAG_APP, "rebooting... 0/3 s");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ESP_LOGI(TAG_APP, "rebooting... 1/3 s");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ESP_LOGI(TAG_APP, "rebooting... 2/3 s");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ESP_LOGI(TAG_APP, "rebooting... 3/3 s");
     esp_restart();
     vTaskDelete(NULL);
 }

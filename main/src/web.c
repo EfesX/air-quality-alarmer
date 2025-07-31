@@ -7,6 +7,7 @@ static const char* TAG = "WEB";
 
 extern esp_err_t save_post_handler(httpd_req_t *req);
 extern esp_err_t root_get_handler(httpd_req_t *req);
+extern esp_err_t update_firmware_handler(httpd_req_t *req);
 
 httpd_handle_t start_webserver(void)
 {
@@ -33,7 +34,17 @@ httpd_handle_t start_webserver(void)
             .user_ctx = NULL
         };
         httpd_register_uri_handler(server, &save);
+
+        httpd_uri_t updfirm = {
+            .uri = "/update",
+            .method = HTTP_POST,
+            .handler = update_firmware_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &updfirm);
     }
+
+    ESP_LOGI(TAG, "...done");
 
     return server;
 }
