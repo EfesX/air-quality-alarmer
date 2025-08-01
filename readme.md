@@ -21,6 +21,7 @@ All sensors and display shares one I2C bus (SCL - PIN_22, SDA - PIN_21).
 
 Buzzer uses PWM on PIN_32.
 
+It is possible to completely disable Wi-Fi. To do this, tie PIN_13 to GND and restart the device.
 
 ## Build and flash
 
