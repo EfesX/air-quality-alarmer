@@ -1,0 +1,96 @@
+name: ESP-IDF Build (Linux + Windows)
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+        target: [ esp32 ]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.espressif
+            esp-idf
+          key: ${{ runner.os }}-esp-idf-${{ hashFiles('**/CMakeLists.txt') }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git wget flex bison gperf cmake ninja-build ccache libffi-dev libssl-dev
+
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install -y git cmake ccache python
+          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+          refreshenv
+
+      - name: Install ESP-IDF (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "esp-idf")) {
+            git clone --recursive https://github.com/espressif/esp-idf.git
+            cd esp-idf
+            .\install.bat
+            . .\export.bat
+            cd ..
+          }
+          else {
+            cd esp-idf
+            git pull
+            git submodule update --init --recursive
+            . .\export.bat
+            cd ..
+          }
+
+      - name: Build project (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          source esp-idf/export.sh
+          idf.py set-target ${{ matrix.target }}
+          idf.py build
+          idf.py size
+
+      - name: Build project (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $env:Path = "C:\Python310;C:\Python310\Scripts;$env:Path"
+          $env:IDF_PATH = "$pwd\esp-idf"
+          
+          cmd /c "call `"$pwd\esp-idf\export.bat`" && set > env_vars.txt"
+          Get-Content env_vars.txt | ForEach-Object {
+            if ($_ -match "^(.*?)=(.*)$") {
+              $name = $matches[1]
+              $value = $matches[2]
+              Set-Content env:\$name $value
+            }
+          }
+          Remove-Item env_vars.txt
+          
+          idf.py set-target ${{ matrix.target }}
+          idf.py build
+
+      - name: Upload firmware as artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: air-quality-alarmer
+          path: build/air-quality-alarmer.bin
