@@ -34,6 +34,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git wget flex bison gperf cmake ninja-build ccache libffi-dev libssl-dev
 
+      - name: Install ESP-IDF (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+            if [ ! -d "esp-idf" ]; then
+              git clone --recursive https://github.com/espressif/esp-idf.git
+              cd esp-idf
+              ./install.sh all
+              . ./export.sh
+              cd ..
+            else
+              cd esp-idf
+              git pull
+              git submodule update --init --recursive
+              . ./export.sh
+              cd ..
+            fi
+
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-latest'
         run: |
