@@ -140,17 +140,19 @@ void app_main(void)
         .queue = display_queue
     };
     xTaskCreatePinnedToCore(display_task, "disp", 
-        4096, (void*) &display_task_config, 
+        2048, (void*) &display_task_config, 
         ESP_TASK_PRIO_MIN + 2, NULL, tskNO_AFFINITY
     );
 
-    xTaskCreatePinnedToCore(uart_log_task, "ulog", 
-        4096, (void*) logging_queue, 
+    vTaskDelay(pdMS_TO_TICKS(250));
+
+        xTaskCreatePinnedToCore(uart_log_task, "ulog", 
+        2048, (void*) logging_queue, 
         ESP_TASK_PRIO_MIN + 1, NULL, tskNO_AFFINITY
     );
 
     xTaskCreatePinnedToCore(buzzer_task, "buzz", 
-        2048, (void*) buzzer_queue, 
+        1024, (void*) buzzer_queue, 
         ESP_TASK_PRIO_MIN + 1, NULL, tskNO_AFFINITY
     );
 
@@ -159,7 +161,7 @@ void app_main(void)
         .sensors_queue = sensors_queue
     };
     xTaskCreatePinnedToCore(measurment_task, "meas", 
-        4096, (void*) &measurment_task_config, 
+        2048, (void*) &measurment_task_config, 
         ESP_TASK_PRIO_MIN + 3, NULL, tskNO_AFFINITY
     );
 

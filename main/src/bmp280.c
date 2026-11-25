@@ -90,26 +90,22 @@ static float bmp280_compensate_temperature(int32_t adc_T)
 
 static float bmp280_compensate_pressure(int32_t adc_P)
 {
-    int64_t var1, var2, p;
+    float var1, var2, p;
 
-    var1 = ((int64_t)calib_data.t_fine) - 128000;
-    var2 = var1 * var1 * (int64_t)calib_data.P6;
-    var2 = var2 + ((var1 * (int64_t)calib_data.P5) << 17);
-    var2 = var2 + (((int64_t)calib_data.P4) << 35);
-    var1 = (((var1 * var1 * (int64_t)calib_data.P3) >> 8) + ((var1 * (int64_t)calib_data.P2) << 12));
-    var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t) calib_data.P1) >> 33;
-
-    if(var1 == 0)
+    var1 = ((int64_t)calib_data.t_fine / 2.0) - 64000.0;
+    var2 = var1 * var1 * ((float)calib_data.P6) / 32768.0;
+    var2 = var2 + var1 * ((float)calib_data.P5) * 2.0;
+    var2 = (var2/4.0) + (((float)calib_data.P4)*65536.0);
+    var1 = (((float)calib_data.P3) * var1 * var1 / 524288.0 + ((float)calib_data.P2) * var1) / 524288.0;
+    var1 = (1.0 + var1 / 32768.0) * ((float)calib_data.P1);
+    if(var1 == 0.0)
         return 0.0f;
-
-    p = 1048576 - adc_P;
-    p = (((p << 31) - var2) * 3125) / var1;
-    var1 = (((int64_t)calib_data.P9) * (p >> 13) * (p >> 13)) >> 25;
-    var2 = (((int64_t)calib_data.P8) * p) >> 19;
-
-    p = ((p + var1 + var2) >> 8) + (((int64_t)calib_data.P7) << 4);
-
-    return (float)p/256.0f;
+    p = 1048576 - (float)adc_P;
+    p = (p - (var2 / 4096.0)) * 6250.0 / var1;
+    var1 = ((float)calib_data.P9) * p * p / 2147483648.0;
+    var2 = p * ((float)calib_data.P8) / 32768.0;
+    p = p + (var1 + var2 + ((float)calib_data.P7)) / 16.0;
+    return p;
 }
 
 esp_err_t bmp280_init(void)
@@ -129,10 +125,7 @@ esp_err_t bmp280_init(void)
 
     bmp280_read_calibration_data();
 
-    // setup work mode
-    // normal mode, temp oversampling x16, press oversampling x16
-    ESP_ERROR_CHECK(bmp280_write_register(BMP280_REG_CTRL_MEAS, 0xf7)); 
-    // standby 0.5ms, filter off
+    ESP_ERROR_CHECK(bmp280_write_register(BMP280_REG_CTRL_MEAS, 0x57)); 
     ESP_ERROR_CHECK(bmp280_write_register(BMP280_REG_CONFIG,    0x00));
 
     return ESP_OK;
