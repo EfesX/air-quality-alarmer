@@ -9,6 +9,7 @@
 #include "display.h"
 #include "main.h"
 #include "measurment.h"
+#include "wifi.h"
 
 #define I2C_MASTER_SCL_IO           22
 #define I2C_MASTER_SDA_IO           21
@@ -118,6 +119,8 @@ static void buzzer_task(void *arg)
 void app_main(void)
 {
     vTaskDelay(pdMS_TO_TICKS(100));
+
+    wifi_start();
 
     i2c_smphr = xSemaphoreCreateMutex();
     sensors_queue = xQueueCreate(1,  sizeof(sensors_data_t));
