@@ -2,7 +2,7 @@
 
 #include "esp_err.h"
 
-#define WIFI_STA_MAX_RETRY  5
+#define WIFI_STA_MAX_RETRY  3
 #define WIFI_STA_CONNECTION_TIMEOUT_MS 15000
 
 #define WIFI_AP_SSID        "ESP_AQA"

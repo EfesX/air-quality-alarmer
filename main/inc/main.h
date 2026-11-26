@@ -8,6 +8,8 @@
 
 #define DISPLAY_LOGO_TIME_MS        3000
 
+#define LOG_SENSORS_ENABLE 0
+
 typedef struct {
     uint8_t status;
     float temperature;
@@ -55,7 +57,4 @@ typedef struct {
 } sensors_data_t;
 
 
-
-/**
- * AQI-UBA  TVOC
-*/
+void reboot_task(void* arg);

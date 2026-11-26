@@ -1,9 +1,12 @@
+#include "creds.h"
 #include "wifi.h"
+#include "web.h"
+
 #include <string.h>
+
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
-#include "nvs_flash.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -16,37 +19,6 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_FAIL_BIT      BIT1
 
 static int s_retry_num = 0;
-
-void save_wifi_creds(const char* ssid, const char* pass)
-{
-    nvs_handle_t nvs;
-
-    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs));
-
-    ESP_ERROR_CHECK(nvs_set_str(nvs, "ssid", ssid));
-    ESP_ERROR_CHECK(nvs_set_str(nvs, "pass", pass));
-
-    ESP_ERROR_CHECK(nvs_commit(nvs));
-    nvs_close(nvs);
-}
-
-void load_wifi_creds(char *ssid, char* pass)
-{
-    nvs_handle_t nvs;
-
-    ESP_ERROR_CHECK(nvs_open("storage", NVS_READONLY, &nvs));
-
-    size_t required_size;
-    
-    ESP_ERROR_CHECK(nvs_get_str(nvs, "ssid", NULL, &required_size));
-    ESP_ERROR_CHECK(nvs_get_str(nvs, "ssid", ssid, &required_size));
-
-    ESP_ERROR_CHECK(nvs_get_str(nvs, "pass", NULL, &required_size));
-    ESP_ERROR_CHECK(nvs_get_str(nvs, "pass", pass, &required_size));
-
-    nvs_close(nvs);
-}
-
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
@@ -188,7 +160,6 @@ void wifi_start(void)
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
 
-
     int wifi_ena = gpio_get_level(WIFI_ENA_PIN);
 
     if(wifi_ena == 0){
@@ -198,17 +169,10 @@ void wifi_start(void)
 
     ESP_LOGI(TAG, "wifi support is enabled");
         
-
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    creds_init();
 
     if(wifi_init_sta() != ESP_OK)
-    {
         wifi_init_ap();
-//        start_webserver();
-    }
+
+    start_webserver();
 }
